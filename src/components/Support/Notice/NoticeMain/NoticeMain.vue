@@ -10,6 +10,7 @@ const route = useRoute();
 const noticeList = ref();
 const noticeCount = ref(0);
 const modalState = useModalStore();
+const noticeId = ref(0);
 
 const noticeSearch = (cPage) => {
   // cPage가 객체인지 확인하고 처리
@@ -27,9 +28,15 @@ const noticeSearch = (cPage) => {
   });
 };
 
+const noticeDetail = (id) => {
+  modalState.$patch({ isOpen: true });
+  noticeId.value = id;
+};
+
 onMounted(() => {
   noticeSearch();
 });
+
 // 현재 문제가 발생하는 이유는 watch 함수에서
 // route.query의 변경을 감지할 때
 // 전체 query 객체가 noticeSearch 함수의 cPage 파라미터로 전달되기 때문입니다.
@@ -57,7 +64,10 @@ watch(
         <template v-if="noticeCount > 0">
           <tr v-for="notice in noticeList" :key="notice.noticeId" class="notice-table-row">
             <td class="notice-cell">{{ notice.noticeId }}</td>
-            <td class="notice-cell cursor-pointer text-blue-600 hover:text-blue-800">
+            <td
+              class="notice-cell cursor-pointer text-blue-600 hover:text-blue-800"
+              @click="noticeDetail(notice.noticeId)"
+            >
               {{ notice.noticeTitle }}
             </td>
             <td class="notice-cell">{{ notice.noticeRegDate.substr(0, 10) }}</td>
@@ -73,7 +83,12 @@ watch(
     </table>
     <PageNavigation :total-items="noticeCount" :items-per-page="5" :on-page-change="noticeSearch" />
   </div>
-  <NoticeModal v-if="modalState.isOpen" />
+  <NoticeModal
+    v-if="modalState.isOpen"
+    :id="noticeId"
+    @post-success="noticeSearch()"
+    @un-mounted-modal="noticeId = $event"
+  />
 </template>
 
 <style>
