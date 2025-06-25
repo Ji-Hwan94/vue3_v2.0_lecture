@@ -7,13 +7,13 @@
     <div class="profile-container">
       <img :src="logoImage" alt="logoImage" class="profile-img" />
       <div class="profile-info">
-        <div class="user-id">{{ user.loginId }}</div>
+        <div class="user-id">{{ user.user.loginId }}</div>
         <button class="logout-btn" @click="handleLogout">로그아웃</button>
       </div>
     </div>
 
     <ul class="menu-list">
-      <li v-for="menuAttrt in user.menus" :key="menuAttrt.mnuId" class="menu-item group">
+      <li v-for="menuAttrt in user.user.usrMnuAtrt" :key="menuAttrt.mnuId" class="menu-item group">
         <div class="menu-header" :class="{ active: activeParent === menuAttrt.mnuId }">
           <img :src="menuIcon" alt="menu" class="menu-icon" />
           <div class="menu-title">{{ menuAttrt.mnuNm }}</div>
@@ -43,6 +43,7 @@ import logoImg from '@/assets/logo_img.png';
 import logoImage from '@/assets/logo.svg';
 import menuIcon from '@/assets/menu.png';
 import { useUserInfo } from '@/stores/loginInfoState';
+import axios from 'axios';
 
 const router = useRouter();
 const activeLink = ref(null);
@@ -79,17 +80,20 @@ const handleLinkClick = (menuId, parentId) => {
 
 const handleLogout = async () => {
   try {
-    await router.push('/');
-    sessionStorage.removeItem('userInfo');
-    deleteCookie('activeParent');
-    deleteCookie('activeLink');
+    await axios.post('/api/login/logout').then(() => {
+      router.push('/');
+      sessionStorage.removeItem('userInfo');
+      deleteCookie('activeParent');
+      deleteCookie('activeLink');
+    });
+    // await
   } catch (error) {
     console.error('로그아웃 실패:', error);
   }
 };
 
-function setCookie(name, value, days = 1) {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+function setCookie(name, value, hours = 1) {
+  const expires = new Date(Date.now() + hours * 3600000).toUTCString(); // 3600000 = 1시간(밀리초)
   document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
 }
 function getCookie(name) {

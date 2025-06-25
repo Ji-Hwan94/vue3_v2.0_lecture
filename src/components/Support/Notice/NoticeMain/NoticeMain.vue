@@ -3,10 +3,13 @@ import PageNavigation from '@/components/common/PageNavigation.vue';
 import axios from 'axios';
 import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import NoticeModal from '../NoticeModal/NoticeModal.vue';
+import { useModalStore } from '@/stores/modalState';
 
 const route = useRoute();
 const noticeList = ref();
 const noticeCount = ref(0);
+const modalState = useModalStore();
 
 const noticeSearch = (cPage) => {
   // cPage가 객체인지 확인하고 처리
@@ -70,6 +73,7 @@ watch(
     </table>
     <PageNavigation :total-items="noticeCount" :items-per-page="5" :on-page-change="noticeSearch" />
   </div>
+  <NoticeModal v-if="modalState.isOpen" />
 </template>
 
 <style>

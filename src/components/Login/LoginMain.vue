@@ -13,7 +13,6 @@ const handlerLogin = () => {
   const param = new URLSearchParams(loginInfo.value);
 
   axios.post('/api/login/loginProc.do', param).then((res) => {
-    console.log(res);
     const data = res.data;
     if (data.result === 'SUCCESS') {
       sessionStorage.setItem('userInfo', JSON.stringify(data));
