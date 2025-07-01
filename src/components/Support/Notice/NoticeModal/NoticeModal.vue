@@ -95,8 +95,40 @@ const deleteHandler = () => {
     });
 };
 
-const handleFileChange = () => {
+const handleFileChange = (e) => {
   isFileChanged.value = true;
+  const fileInfo = e.target.files;
+  const fileInfoSplit = fileInfo[0].name.split('.');
+  const fileExtension = fileInfoSplit[1].toLowerCase();
+
+  if (fileExtension === 'jpg' || fileExtension === 'gif' || fileExtension === 'png') {
+    imageUrl.value = URL.createObjectURL(fileInfo[0]);
+  }
+};
+
+const downloadFile = () => {
+  axios
+    .get('/api/support/downloadFile.do', {
+      params: { id: props.id },
+      responseType: 'blob', // 파일 다운로드를 위해 blob으로 응답 받기
+    })
+    .then((res) => {
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', detail.value.fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      // 메모리 정리
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    })
+    .catch((error) => {
+      console.error('Download error:', error);
+      catchError(error);
+    });
 };
 
 onMounted(() => {
@@ -118,7 +150,7 @@ onUnmounted(() => {
         <input id="fileInput" type="file" name="file" @change="handleFileChange" />
         <label class="img-label" htmlFor="fileInput"> 파일 첨부하기 </label>
         <div>
-          <div>
+          <div @click="downloadFile">
             <label>미리보기</label>
             <img class="preview-image" :src="imageUrl" />
           </div>
