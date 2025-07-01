@@ -7,6 +7,9 @@ import { onMounted, onUnmounted, ref } from 'vue';
 const modalState = useModalStore();
 const formRef = ref();
 const detail = ref({});
+const imageUrl = ref('');
+const isFileChanged = ref(false);
+
 const props = defineProps({
   id: {
     type: Number,
@@ -21,6 +24,12 @@ const searchDetail = () => {
     .get('/api/support/noticeDetail.do', { params: { id: props.id } })
     .then((res) => {
       detail.value = res.data;
+
+      // 파일 정보가 있으면 서버 API를 통해 이미지 URL 설정
+      if (res.data.logicalPath) {
+        // 서버에서 이미지를 제공하는 API 엔드포인트 사용
+        imageUrl.value = `/api/common/getImage.do?path=${encodeURIComponent(res.data.logicalPath)}`;
+      }
     })
     .catch((error) => {
       catchError(error);
@@ -30,7 +39,7 @@ const searchDetail = () => {
 // formRef.value는 DOM 요소(form element)를 참조합니다
 const handleSubmit = () => {
   const formData = new FormData(formRef.value);
-  console.log(formData);
+
   axios
     .post('/api/support/noticeSave.do', formData)
     .then((res) => {
@@ -45,13 +54,22 @@ const handleSubmit = () => {
 };
 
 const updateHandler = () => {
+  const formData = new FormData(formRef.value);
+  console.log(props.id);
+  formData.append('noticeId', props.id);
+
+  // 파일이 변경되지 않았다면 파일 정보 제거
+  if (!isFileChanged.value) {
+    formData.delete('file');
+  }
+
   // PATCH는 "일부만 수정" 용도이지만,
   // 실제로는 data에 담긴 모든 값이 서버로 전달됩니다.
   // 진짜 변경된 값만 보내고 싶다면, 직접 필터링해서 보내야 합니다.
   // 서버가 "값이 온 필드만 수정"하도록 구현되어 있다면,
   // 일부 필드만 보내도 정상 동작합니다.
   axios
-    .patch('/api/support/noticeUpdate.do', detail.value)
+    .patch('/api/support/noticeUpdate.do', formData)
     .then((res) => {
       if (res.data.result === 'SUCCESS') {
         modalState.$patch({ isOpen: false });
@@ -77,6 +95,10 @@ const deleteHandler = () => {
     });
 };
 
+const handleFileChange = () => {
+  isFileChanged.value = true;
+};
+
 onMounted(() => {
   props.id && searchDetail();
 });
@@ -93,12 +115,12 @@ onUnmounted(() => {
         <label> 제목 :<input v-model="detail.noticeTitle" type="text" name="title" /> </label>
         <label> 내용 :<input v-model="detail.noticeContent" type="text" name="content" /> </label>
         파일 :
-        <input id="fileInput" type="file" name="file" />
+        <input id="fileInput" type="file" name="file" @change="handleFileChange" />
         <label class="img-label" htmlFor="fileInput"> 파일 첨부하기 </label>
         <div>
           <div>
             <label>미리보기</label>
-            <img class="preview-image" />
+            <img class="preview-image" :src="imageUrl" />
           </div>
         </div>
         <div class="button-container">

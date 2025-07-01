@@ -21,7 +21,11 @@
 }
 
 .preview-image {
-  @apply h-[100px] w-[100px] object-cover;
+  @apply h-[100px] w-[100px] rounded-md border border-gray-300 object-cover;
+}
+
+.no-image {
+  @apply flex h-[100px] w-[100px] items-center justify-center rounded-md border border-gray-300 bg-gray-100 text-sm text-gray-500;
 }
 
 .img-label {
